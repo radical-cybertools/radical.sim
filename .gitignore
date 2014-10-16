@@ -1,7 +1,7 @@
 *.py[cod]
 .DS_Store
-src/radical/pilot/VERSION
-src/radical/pilot/VERSION.git
+src/radical/sim/VERSION
+src/radical/sim/VERSION.git
 
 # C extensions
 *.so
