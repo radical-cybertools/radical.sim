@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# -----------------------------------------------------------------------------
+# Author: Mark Santcroos (mark.santcroos@rutgers.edu)
+# Copyright 2014, mark.santcroos@rutgers.edu
+# License under the MIT License
+#
+# This script returns the version.
+#
+
+python -c "import radical.sim; print radical.sim.version_detail"
