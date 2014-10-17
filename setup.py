@@ -133,7 +133,7 @@ setup_args = {
                          ],
     'package_data'     : {'': ['*.sh', '*.json', 'VERSION', 'VERSION.git']},
 
-    'install_requires' : ['setuptools', 'simpy'],
+    'install_requires' : ['setuptools', 'simpy', 'radical.utils'],
     'tests_require'    : ['setuptools', 'nose'],
     'test_suite'       : 'radical.sim.tests',
     'zip_safe'         : False,
