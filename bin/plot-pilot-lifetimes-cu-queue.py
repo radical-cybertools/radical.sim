@@ -9,26 +9,31 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
 
     # Pilot Life times
     pilot_start_times = []
-    emin = []
-    for new, running, end in pilot_lifetimes:
+    durations = []
+    cum_cores = 0
+    pilots = []
+    for cores, new, running, end in pilot_lifetimes:
         if not end:
             end = ltf + 1
         pilot_start_times.append(new) # collect start coordinates
-        emin.append(end-new) # collect duration
-    pilots = range(1, len(pilot_start_times)+1) # y axis increases for every pilot
-    pilot_duration = [ [0] * len(emin), emin ] # error = (0, duration)
+        durations.append(end-new) # collect duration
+        y = cum_cores + cores/2.0 + 0.5
+        pilots.append(y)
+        cum_cores += cores
+    pilot_durations = [ [0] * len(pilots), durations ] # error = [(0, duration)]
 
     eb = plt.subplot(111)
     eb.yaxis.set_major_locator(MaxNLocator(integer=True))
     eb.set_ylabel('ComputePilot Instance')
     eb.set_xlabel('Time (s)')
+    eb.set_ylim(0,10)
 
     # Plot total lifetime
-    eb.errorbar(pilot_start_times, pilots, xerr=pilot_duration, fmt='None', ecolor='black', label='ComputePilot')
+    eb.errorbar(pilot_start_times, pilots, xerr=pilot_durations, fmt='None', ecolor='black', label='ComputePilot')
 
     # Pilot Queue times
     color='red'
-    for i, (new, running, end) in enumerate(pilot_lifetimes, 1):
+    for i, (cores, new, running, end) in enumerate(pilot_lifetimes, 1):
 
         # plot red only for pilots that never started
         if not running:
@@ -38,7 +43,7 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
                 facecolor=color, label='Pilot Queue')
 
     # CU Life Times
-    for pilot, name, state, errno, download, run, upload, end, site in cus:
+    for pilot, name, cores, state, errno, download, run, upload, end, site in cus:
         colors=['yellow', 'green', 'orange']
         hatch = None
         if run == 0:
@@ -79,7 +84,7 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
 #    ya = tq.get_yaxis()
 #    ya.set_major_locator(MaxNLocator(integer=True))
 
-    #plt.ylim(0,5)
+    #plt.ylim(0,10)
     #plt.xlim(1353410004-100, ltf+100)
 
     # Get handles and labels for both eb and tq
@@ -138,21 +143,21 @@ def last_cu_done(cus):
 if __name__ == '__main__':
 
     # Compute Pilots
-    #  tuples of (0:new, 1:running, 2:end )
+    #  tuples of (0:cores, 1:new, 2:running, 3:end )
     my_pilot_lifetimes = [
-        (1, 2, None),
-        (2, 4, 8),
-        (3, 5, 10)
+        (1, 1, 2, None),
+        (2, 2, 4, 8),
+        (3, 2, 4, 8),
+        (4, 3, 5, 10)
     ]
 
-
     # Compute Units
-    # tuplics of (0:pilot, 1:name, 2:state, 3:errno, r:download, 5:run, 6:upload, 7:end, 8:site)
+    # tuplics of (0:pilot, 1:name, 2:cores, 3:state, 4:errno, 5:download, 6:run, 7:upload, 8:end, 9:site)
     my_cus = [
-        (0, "cu0", "Done", 0, 2, 4,  6, 7, "stampede"),
-        (1, "cu1", "Done", 0, 4, 5,  7, 8, "stampede"),
-        (2, "cu2", "Done", 0, 5, 6,  8, 9, "stampede"),
-        (0, "cu3", "Done", 0, 12,13,16,18, "stampede")
+        (0, "cu0", 1, "Done", 0, 2, 4,  6, 7, "stampede"),
+        (1, "cu1", 1, "Done", 0, 4, 5,  7, 8, "stampede"),
+        (2, "cu2", 2, "Done", 0, 5, 6,  8, 9, "stampede"),
+        (0, "cu3", 4, "Done", 0, 12,13,16,18, "stampede")
     ]
 
     # TaskQueue
@@ -164,8 +169,8 @@ if __name__ == '__main__':
 
     my_ltf = last_cu_done(my_cus)
 
-    #print my_pilot_lifetimes
-    #print my_cus
-    #print my_tq
+    print my_pilot_lifetimes
+    print my_cus
+    print my_tq
 
     plot_pilotlifetime(my_pilot_lifetimes, my_cus, my_tq, my_ltf)
