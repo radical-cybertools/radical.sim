@@ -122,7 +122,7 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
     labels.append("Failed") 
     
     # draw the legend 
-    eb.legend(handles, labels, loc=2)
+    eb.legend(handles, labels, loc=1)
 
     plt.title('ComputePilot Lifetimes with ComputeUnit Queue Length')
 
