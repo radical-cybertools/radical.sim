@@ -58,14 +58,14 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
             #colors=['black', 'black', 'black']
             hatch='x'
         # TODO: what if execution or upload fails?
+        # eb.broken_barh([(download, run-download),
+        #                  (run, upload-run),
+        #                  (upload, end-upload)], (pilots[pilot]-0.3, .6),
+        #                  facecolor=colors,
+        #                  hatch=hatch, label='CU')
         eb.broken_barh([(download, run-download),
                          (run, upload-run),
-                         (upload, end-upload)], (pilot+0.7, .6), 
-                         facecolor=colors,
-                         hatch=hatch, label='CU')
-        eb.broken_barh([(download, run-download),
-                         (run, upload-run),
-                         (upload, end-upload)], (pilot+0.7, .6), 
+                         (upload, end-upload)], (pilots[pilot]-.3, .6),
                          facecolor=colors, edgecolors=colors,
                          hatch=hatch, label='CU', color='None')
 
