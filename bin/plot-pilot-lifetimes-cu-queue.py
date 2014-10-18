@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
-import time
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator
-from parse import parse_file, last_cu_done
-
+from parse import parse_file
 
 def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
 
@@ -124,6 +122,17 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
 
 
 
+def last_cu_done(cus):
+
+    # keep track of the finishing time of the last compute unit
+    last = 0
+
+    for cu in cus:
+        done = cu[7]
+        #done = cu[4]
+        last = max(last, done)
+
+    return last
 
 
 if __name__ == '__main__':
