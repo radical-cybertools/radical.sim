@@ -49,7 +49,7 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
         cum_cores += cores
 
     # CU Life Times
-    for pilot, name, cores, state, errno, download, run, upload, end, site in cus:
+    for pilot, slot, name, cores, state, errno, download, run, upload, end, site in cus:
         colors=['yellow', 'green', 'orange']
         hatch = None
         if run == 0:
@@ -57,15 +57,18 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
             upload = end
             #colors=['black', 'black', 'black']
             hatch='x'
+
+        y = pilots[pilot] - pilot_lifetimes[pilot][0]/2.0 + 0.5 + slot
+
         # TODO: what if execution or upload fails?
         # eb.broken_barh([(download, run-download),
         #                  (run, upload-run),
-        #                  (upload, end-upload)], (pilots[pilot]-0.3, .6),
+        #                  (upload, end-upload)], (y-0.4, .8),
         #                  facecolor=colors,
         #                  hatch=hatch, label='CU')
         eb.broken_barh([(download, run-download),
                          (run, upload-run),
-                         (upload, end-upload)], (pilots[pilot]-.3, .6),
+                         (upload, end-upload)], (y-.4, .8),
                          facecolor=colors, edgecolors=colors,
                          hatch=hatch, label='CU', color='None')
 
@@ -158,12 +161,12 @@ if __name__ == '__main__':
     ]
 
     # Compute Units
-    # tuplics of (0:pilot, 1:name, 2:cores, 3:state, 4:errno, 5:download, 6:run, 7:upload, 8:end, 9:site)
+    # tuplics of (0:pilot, 1:slot, 2:name, 3:cores, 4:state, 5:errno, 6:download, 7:run, 8:upload, 9:end, 10:site)
     my_cus = [
-        (0, "cu0", 1, "Done", 0, 2, 4,  6, 7, "stampede"),
-        (1, "cu1", 1, "Done", 0, 4, 5,  7, 8, "stampede"),
-        (2, "cu2", 2, "Done", 0, 5, 6,  8, 9, "stampede"),
-        (0, "cu3", 4, "Done", 0, 12,13,16,18, "stampede")
+        (0, 0, "cu0", 1, "Done", 0, 2, 4,  6, 7, "stampede"),
+        (1, 1, "cu1", 1, "Done", 0, 4, 5,  7, 8, "stampede"),
+        (2, 1, "cu2", 2, "Done", 0, 5, 6,  8, 9, "stampede"),
+        (2, 2, "cu3", 4, "Done", 0, 12,13,16,18, "stampede")
     ]
 
     # TaskQueue
