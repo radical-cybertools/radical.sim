@@ -1,6 +1,6 @@
 import simpy
 from errors import ResourceException
-from logger import simlog
+from logger import simlog, INFO, WARNING, ERROR
 
 class ComputeUnit(object):
 
@@ -14,7 +14,7 @@ class ComputeUnit(object):
         self.cores = cores
         self.pilot = None
 
-        simlog.info("Creating ComputeUnit %d." % self.id)
+        simlog(INFO, "Creating ComputeUnit %d." % self.id, self.env)
 
         # Start the run process every time an instance is created.
         #self.action = env.process(self.run())
@@ -29,7 +29,7 @@ class ComputeUnit(object):
             # Register the walltime interrupter
             #self.env.process(self.walltime(60))
 
-            simlog.info('Start executing CU %d at %d' % (self.id, self.env.now))
+            simlog(INFO, 'Start executing CU %d at %d' % (self.id, self.env.now), self.env)
 
             exec_duration = 15
             # We yield the process that process() returns
@@ -37,14 +37,14 @@ class ComputeUnit(object):
             try:
                 yield self.env.process(self.execute(exec_duration))
             except simpy.Interrupt as i:
-                simlog.error('Interrupted at %d by %s' % (self.env.now, i.cause))
+                simlog(ERROR, 'Interrupted at %d by %s' % (self.env.now, i.cause), self.env)
                 return
 
-            simlog.info('Execution of CU %d completed at %d' % (self.id, self.env.now))
+            simlog(INFO, 'Execution of CU %d completed at %d' % (self.id, self.env.now), self.env)
         except ResourceException as e:
-            simlog.warning("Couldn't get resource, ignoring ...")
+            simlog(WARNING, "Couldn't get resource, ignoring ...", self.env)
         except Exception as e:
-            simlog.error("Exception in CU Run(): %s" % e.message)
+            simlog(ERROR, "Exception in CU Run(): %s" % e.message, self.env)
             raise e
         else:
             # Release resources

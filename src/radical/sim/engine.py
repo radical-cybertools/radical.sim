@@ -3,14 +3,15 @@ from compute_unit import ComputeUnit
 from compute_pilot import ComputePilot
 from dci import DCI
 from scheduler import Scheduler
-from logger import simlog
+from logger import simlog, INFO, ERROR, DEBUG, WARNING, CRITICAL
 from version import version, version_detail
 
 def run():
 
-    simlog.info('radical.sim version: %s (%s)' % (version, version_detail))
 
     env = Environment()
+
+    simlog(INFO, 'radical.sim version: %s (%s)' % (version, version_detail), env)
 
     stampede = DCI(env, "stampede", 1024)
     archer = DCI(env, "archer", 2048)
@@ -34,6 +35,8 @@ def run():
     sched.submit_cu(cu4)
 
     env.run(until=1000)
+    #import sys
+    #sys.exit()
 
 
 if __name__ == '__main__':

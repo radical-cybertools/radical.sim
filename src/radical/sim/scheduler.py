@@ -1,7 +1,7 @@
 from simpy.events import AnyOf
 from collections import deque
 from states import RUNNING
-from logger import simlog
+from logger import simlog, INFO, DEBUG, WARNING
 
 class Scheduler(object):
     """BackFilling Scheduler"""
@@ -13,12 +13,14 @@ class Scheduler(object):
         self.new_cus = deque() # efficient operation on the left of the queue
         self.active_cus = [] # Need a list as an argument to AnyOf
 
+        simlog(INFO, "Intitializing scheduler %s." % self.name, self.env)
+
         # Start the run process every time an instance is created.
         self.action = env.process(self.run())
 
     # run() is a special method
     def run(self):
-        simlog.info("Scheduler %s starting." % self.name)
+        simlog(INFO, "Scheduler %s starting." % self.name, self.env)
 
         while True:
             # TODO: check for running pilots
@@ -32,19 +34,19 @@ class Scheduler(object):
                 try:
                     cu = self.new_cus.popleft()
 
-                    simlog.debug("Trying to schedule CU %d onto Pilot %d at %d ..." % (cu.id, pilot.id, self.env.now))
+                    simlog(DEBUG, "Trying to schedule CU %d onto Pilot %d at %d ..." % (cu.id, pilot.id, self.env.now), self.env)
                     if cu.cores <= pilot.level:
                         pilot.get(cu.cores)
-                        simlog.info("Found pilot %d to schedule CU %d onto at %d." % (pilot.id, cu.id, self.env.now))
+                        simlog(INFO, "Found pilot %d to schedule CU %d onto at %d." % (pilot.id, cu.id, self.env.now), self.env)
                         cu.pilot = pilot
                         self.active_cus.append(self.env.process(cu.run()))
                     else:
-                        simlog.warning("Pilot %d has no capacity to schedule CU %d at %d." % (pilot.id, cu.id, self.env.now))
+                        simlog(WARNING, "Pilot %d has no capacity to schedule CU %d at %d." % (pilot.id, cu.id, self.env.now), self.env)
                         # Put it back in the queue
                         self.new_cus.appendleft(cu)
 
                 except IndexError:
-                    simlog.debug("No new CUs to process at %d ..." % self.env.now)
+                    simlog(DEBUG, "No new CUs to process at %d ..." % self.env.now, self.env)
                     yield self.env.timeout(100)
 
             finished = yield AnyOf(self.env, self.active_cus)

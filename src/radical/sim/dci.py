@@ -1,7 +1,7 @@
 from simpy import Container
 from errors import ResourceException
 from random import gauss
-from logger import simlog
+from logger import simlog, INFO
 from constants import QUEUEING_MEAN, QUEUING_STD
 
 class DCI(Container):
@@ -10,6 +10,7 @@ class DCI(Container):
         self.name = name
         self.env = env
         super(DCI, self).__init__(env, cores, init=0)
+        simlog(INFO, "Initializing DCI '%s' with %d cores." % (name, cores), self.env)
 
     def submit_job(self, job, cores):
         if cores > self.capacity:
@@ -19,8 +20,8 @@ class DCI(Container):
         if queuing_delay < 0:
             queuing_delay = 0
 
-        simlog.info("Waiting for %d seconds on job request of size %d." % (queuing_delay, cores))
+        simlog(INFO, "Waiting for %d seconds on job request of size %d." % (queuing_delay, cores), self.env)
         yield self.env.timeout(queuing_delay)
 
-        simlog.info("Job launching on %s with %d cores at %d." % (self.name, cores, self.env.now))
+        simlog(INFO, "Job launching on %s with %d cores at %d." % (self.name, cores, self.env.now), self.env)
         yield job.put(cores)

@@ -1,7 +1,7 @@
 from simpy import Container
 from errors import ResourceException
 from states import NEW, RUNNING, DONE
-from logger import simlog
+from logger import simlog, INFO, DEBUG
 from constants import AGENT_STARTUP_DELAY
 
 class ComputePilot(Container):
@@ -21,18 +21,21 @@ class ComputePilot(Container):
         self.env = env
         self.state = NEW
 
-        env.process(self.launch_pilot(env))
+        env.process(self.launch_pilot())
 
-    def launch_pilot(self, env):
+    def launch_pilot(self):
 
-        simlog.info("Queuing pilot %d of %d cores on DCI '%s'." % (self.id, self.cores, self.dci.name))
-        yield env.process(self.dci.submit_job(self, self.cores))
+        simlog(INFO, "Queuing pilot %d of %d cores on DCI '%s'." %
+               (self.id, self.cores, self.dci.name), self.env)
+        yield self.env.process(self.dci.submit_job(self, self.cores))
 
-        simlog.debug("Pilot %d launching on '%s' at %d." % (self.id, self.dci.name, env.now))
-        yield env.timeout(AGENT_STARTUP_DELAY)
+        simlog(DEBUG, "Pilot %d launching on '%s' at %d." %
+               (self.id, self.dci.name, self.env.now), self.env)
+        yield self.env.timeout(AGENT_STARTUP_DELAY)
 
         self.state = RUNNING
-        simlog.info("Pilot %d started running on '%s' at %d." % (self.id, self.dci.name, env.now))
+        simlog(INFO,"Pilot %d started running on '%s' at %d." %
+               (self.id, self.dci.name, self.env.now), self.env)
 
 
     def put(self, amount):
@@ -41,12 +44,14 @@ class ComputePilot(Container):
                 "as it is more than capacity (%d) allows." %
                             (amount, self.level, self.capacity))
 
-        simlog.debug("Adding %d cores to the capacity of Pilot %d on %s." % (amount, self.id, self.dci.name))
+        simlog(DEBUG,"Adding %d cores to the capacity of Pilot %d on %s." %
+               (amount, self.id, self.dci.name), self.env)
         return super(ComputePilot, self).put(amount)
 
     def get(self, amount):
         if amount > self.capacity:
             raise ResourceException("Can't get more than capacity allows.")
 
-        simlog.info("Requesting %d cores from the capacity of Pilot %d on %s." % (amount, self.id, self.dci.name))
+        simlog(INFO, "Requesting %d cores from the capacity of Pilot %d on %s." %
+               (amount, self.id, self.dci.name), self.env)
         return super(ComputePilot, self).get(amount)
