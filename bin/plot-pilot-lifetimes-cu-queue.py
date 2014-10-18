@@ -33,14 +33,20 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
 
     # Pilot Queue times
     color='red'
-    for i, (cores, new, running, end) in enumerate(pilot_lifetimes, 1):
+    cum_cores = 0
+    for cores, new, running, end in pilot_lifetimes:
+        y = cum_cores + cores/2.0 + 0.5
+        #y = cum_cores + cores
+        #y = cum_cores + cores/2.0 + 0.5
 
         # plot red only for pilots that never started
         if not running:
             running = ltf + 1
 
-        eb.broken_barh([(new, running-new)], (i-0.3, .6), edgecolor=color,
+        eb.broken_barh([(new, running-new)], (y-cores/2.0+.1, cores-.2), edgecolor=color,
                 facecolor=color, label='Pilot Queue')
+
+        cum_cores += cores
 
     # CU Life Times
     for pilot, name, cores, state, errno, download, run, upload, end, site in cus:
@@ -146,9 +152,9 @@ if __name__ == '__main__':
     #  tuples of (0:cores, 1:new, 2:running, 3:end )
     my_pilot_lifetimes = [
         (1, 1, 2, None),
-        (2, 2, 4, 8),
-        (3, 2, 4, 8),
-        (4, 3, 5, 10)
+        (2, 2, 3, 8),
+        (3, 3, 4, 8),
+        (4, 4, 5, 10)
     ]
 
     # Compute Units
