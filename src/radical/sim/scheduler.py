@@ -1,6 +1,6 @@
 from simpy.events import AnyOf
 from collections import deque
-from states import ACTIVE
+from states import ACTIVE, STATE_X
 from logger import simlog, INFO, DEBUG, WARNING
 
 class Scheduler(object):
@@ -54,12 +54,14 @@ class Scheduler(object):
                 (fin_proc, fin_cu) = finished.popitem()
                 self.active_cus.remove(fin_proc)
                 fin_cu.pilot.put(fin_cu.cores)
+                self.env.cu_state_history[fin_cu.id] = fin_cu.state_history
 
             yield self.env.timeout(100)
 
 
     def submit_cu(self, cu):
         self.new_cus.append(cu)
+        cu.state = STATE_X
 
     def add_pilot(self, pilot):
         self.pilots.append(pilot)

@@ -10,6 +10,7 @@ def run():
 
 
     env = Environment()
+    env.cu_state_history = {}
 
     simlog(INFO, 'radical.sim version: %s (%s)' % (version, version_detail), env)
 
@@ -35,9 +36,8 @@ def run():
     sched.submit_cu(cu4)
 
     env.run(until=1000)
-    #import sys
-    #sys.exit()
 
+    print("CU state history: %s" % env.cu_state_history)
 
 if __name__ == '__main__':
     run()

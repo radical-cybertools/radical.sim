@@ -14,8 +14,8 @@ class ComputeUnit(object):
         self.env = env
         self.cores = cores
         self.pilot = None
-        self._state = NEW
         self.state_history = {}
+        self.state = NEW
 
         simlog(INFO, "Creating ComputeUnit %d." % self.id, self.env)
 
