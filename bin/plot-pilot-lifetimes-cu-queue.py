@@ -26,7 +26,7 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
     eb.yaxis.set_major_locator(MaxNLocator(integer=True))
     eb.set_ylabel('ComputePilot Instance')
     eb.set_xlabel('Time (s)')
-    eb.set_ylim(0,10)
+    #eb.set_ylim(0,10)
 
     # Plot total lifetime
     eb.errorbar(pilot_start_times, pilots, xerr=pilot_durations, fmt='None', ecolor='black', label='ComputePilot')
@@ -49,7 +49,7 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
         cum_cores += cores
 
     # CU Life Times
-    for pilot, slot, name, cores, state, errno, download, run, upload, end, site in cus:
+    for pilot, slots, name, cores, state, errno, download, run, upload, end, site in cus:
         colors=['yellow', 'green', 'orange']
         hatch = None
         if run == 0:
@@ -58,19 +58,20 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
             #colors=['black', 'black', 'black']
             hatch='x'
 
-        y = pilots[pilot] - pilot_lifetimes[pilot][0]/2.0 + 0.5 + slot
+        for slot in slots:
+            y = pilots[pilot] - pilot_lifetimes[pilot][0]/2.0 + 0.5 + slot
 
-        # TODO: what if execution or upload fails?
-        # eb.broken_barh([(download, run-download),
-        #                  (run, upload-run),
-        #                  (upload, end-upload)], (y-0.4, .8),
-        #                  facecolor=colors,
-        #                  hatch=hatch, label='CU')
-        eb.broken_barh([(download, run-download),
-                         (run, upload-run),
-                         (upload, end-upload)], (y-.4, .8),
-                         facecolor=colors, edgecolors=colors,
-                         hatch=hatch, label='CU', color='None')
+            # TODO: what if execution or upload fails?
+            # eb.broken_barh([(download, run-download),
+            #                  (run, upload-run),
+            #                  (upload, end-upload)], (y-0.4, .8),
+            #                  facecolor=colors,
+            #                  hatch=hatch, label='CU')
+            eb.broken_barh([(download, run-download),
+                             (run, upload-run),
+                             (upload, end-upload)], (y-.4, .8),
+                             facecolor=colors, edgecolors=colors,
+                             hatch=hatch, label='CU', color='None')
 
         #plt.fill(x,np.sin(x),color='blue',alpha=0.5)
         #plt.fill(x,np.sin(x),color='None',alpha=0.5,edgecolor='blue',hatch='/')
@@ -161,12 +162,12 @@ if __name__ == '__main__':
     ]
 
     # Compute Units
-    # tuplics of (0:pilot, 1:slot, 2:name, 3:cores, 4:state, 5:errno, 6:download, 7:run, 8:upload, 9:end, 10:site)
+    # tuplics of (0:pilot, 1:slots, 2:name, 3:cores, 4:state, 5:errno, 6:download, 7:run, 8:upload, 9:end, 10:site)
     my_cus = [
-        (0, 0, "cu0", 1, "Done", 0, 2, 4,  6, 7, "stampede"),
-        (1, 1, "cu1", 1, "Done", 0, 4, 5,  7, 8, "stampede"),
-        (2, 1, "cu2", 2, "Done", 0, 5, 6,  8, 9, "stampede"),
-        (2, 2, "cu3", 4, "Done", 0, 12,13,16,18, "stampede")
+        (0, [0], "cu0", 1, "Done", 0, 2, 4,  6, 7, "stampede"),
+        (1, [1], "cu1", 1, "Done", 0, 4, 5,  7, 8, "stampede"),
+        (2, [1,2], "cu2", 2, "Done", 0, 5, 6,  8, 9, "stampede"),
+        (3, [0,1,2,3], "cu3", 4, "Done", 0, 12,13,16,18, "stampede")
     ]
 
     # TaskQueue
