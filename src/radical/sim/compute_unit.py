@@ -15,7 +15,7 @@ class ComputeUnit(object):
         self.cores = cores
         self.pilot = None
         self._state = NEW
-        self._state_history = {}
+        self.state_history = {}
 
         simlog(INFO, "Creating ComputeUnit %d." % self.id, self.env)
 
@@ -32,7 +32,7 @@ class ComputeUnit(object):
     @state.setter
     def state(self, new_state):
         self._state = new_state
-        self._state_history[new_state] = self.env.now
+        self.state_history[new_state] = self.env.now
 
     # run() is a special method
     def run(self):
