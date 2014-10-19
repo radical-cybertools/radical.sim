@@ -14,7 +14,8 @@ class ComputeUnit(object):
         self.env = env
         self.cores = cores
         self.pilot = None
-        self.state = NEW
+        self._state = NEW
+        self._state_history = {}
 
         simlog(INFO, "Creating ComputeUnit %d." % self.id, self.env)
 
@@ -23,6 +24,15 @@ class ComputeUnit(object):
 
         self.cu_reactivate = env.event()
 
+    @property
+    def state(self):
+        """I'm the 'state' property."""
+        return self._state
+
+    @state.setter
+    def state(self, new_state):
+        self._state = new_state
+        self._state_history[new_state] = self.env.now
 
     # run() is a special method
     def run(self):
