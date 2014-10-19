@@ -1,6 +1,6 @@
 from simpy.events import AnyOf
 from collections import deque
-from states import RUNNING
+from states import ACTIVE
 from logger import simlog, INFO, DEBUG, WARNING
 
 class Scheduler(object):
@@ -27,7 +27,7 @@ class Scheduler(object):
 
             for pilot in self.pilots:
 
-                if pilot.state != RUNNING:
+                if pilot.state != ACTIVE:
                     #self.env.timeout(100)
                     continue
 

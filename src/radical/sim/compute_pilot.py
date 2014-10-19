@@ -1,6 +1,6 @@
 from simpy import Container
 from errors import ResourceException
-from states import NEW, RUNNING, DONE
+from states import NEW, PENDING_LAUNCH, PENDING_ACTIVE, ACTIVE
 from logger import simlog, INFO, DEBUG
 from constants import AGENT_STARTUP_DELAY
 
@@ -21,19 +21,25 @@ class ComputePilot(Container):
         self.env = env
         self.state = NEW
 
+        # TODO: This should probably be triggered by an external process
+        self.state = PENDING_LAUNCH
         env.process(self.launch_pilot())
 
     def launch_pilot(self):
 
+        self.state = PENDING_ACTIVE
         simlog(INFO, "Queuing pilot %d of %d cores on DCI '%s'." %
                (self.id, self.cores, self.dci.name), self.env)
         yield self.env.process(self.dci.submit_job(self, self.cores))
+
+        # NOTE: I don't think RP has a state to denote the state between
+        # the "job started and the agent becoming active.
 
         simlog(DEBUG, "Pilot %d launching on '%s' at %d." %
                (self.id, self.dci.name, self.env.now), self.env)
         yield self.env.timeout(AGENT_STARTUP_DELAY)
 
-        self.state = RUNNING
+        self.state = ACTIVE
         simlog(INFO,"Pilot %d started running on '%s' at %d." %
                (self.id, self.dci.name, self.env.now), self.env)
 
