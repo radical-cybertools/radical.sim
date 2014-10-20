@@ -19,11 +19,24 @@ class ComputePilot(Container):
         self.dci = dci
         self.cores = cores
         self.env = env
+
+        self.state_history = {}
+        self._state = None
         self.state = NEW
 
         # TODO: This should probably be triggered by an external process
         self.state = PENDING_LAUNCH
         env.process(self.launch_pilot())
+
+    @property
+    def state(self):
+        """I'm the 'state' property."""
+        return self._state
+
+    @state.setter
+    def state(self, new_state):
+        self._state = new_state
+        self.state_history[new_state] = self.env.now
 
     def launch_pilot(self):
 
@@ -43,6 +56,8 @@ class ComputePilot(Container):
         simlog(INFO,"Pilot %d started running on '%s' at %d." %
                (self.id, self.dci.name, self.env.now), self.env)
 
+
+        self.env.pilot_state_history[self.id] = self.state_history
 
     def put(self, amount):
         if amount + self.level > self.capacity:
