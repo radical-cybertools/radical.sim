@@ -1,14 +1,17 @@
-from simpy import Container
+from simpy import Container, Interrupt
 from errors import ResourceException
-from states import NEW, PENDING_LAUNCH, PENDING_ACTIVE, ACTIVE
-from logger import simlog, INFO, DEBUG
-from constants import AGENT_STARTUP_DELAY
+from states import NEW, PENDING_LAUNCH, PENDING_ACTIVE, ACTIVE, DONE, CANCELED
+from logger import simlog, INFO, DEBUG, WARNING
+from constants import AGENT_STARTUP_DELAY, INITIAL_COMPUTE_PILOT_ID, \
+    DEFAULT_CORES_PER_PILOT, DEFAULT_WALLTIME
+
 
 class ComputePilot(Container):
 
-    _id_counter = 1
+    _id_counter = INITIAL_COMPUTE_PILOT_ID
 
-    def __init__(self, env, dci, cores=1):
+    def __init__(self, env, dci,
+                 cores=DEFAULT_CORES_PER_PILOT, walltime=None):
         # Create a CP Container with requested capacity and initial level=0
         super(ComputePilot, self).__init__(env, capacity=cores, init=0)
 
@@ -17,8 +20,10 @@ class ComputePilot(Container):
         ComputePilot._id_counter += 1
 
         self.dci = dci
-        self.cores = cores
         self.env = env
+
+        self.cores = cores
+        self.walltime = walltime
 
         self.state_history = {}
         self._state = None
@@ -26,7 +31,8 @@ class ComputePilot(Container):
 
         # TODO: This should probably be triggered by an external process
         self.state = PENDING_LAUNCH
-        env.process(self.launch_pilot())
+        self.submission = env.process(self.submit_pilot())
+        self.agent = env.process(self.run_pilot())
 
     @property
     def state(self):
@@ -38,24 +44,40 @@ class ComputePilot(Container):
         self._state = new_state
         self.state_history[new_state] = self.env.now
 
-    def launch_pilot(self):
+    def submit_pilot(self):
 
         self.state = PENDING_ACTIVE
         simlog(INFO, "Queuing pilot %d of %d cores on DCI '%s'." %
                (self.id, self.cores, self.dci.name), self.env)
-        yield self.env.process(self.dci.submit_job(self, self.cores))
+        self.job_id = yield self.env.process(
+            self.dci.submit_job(self, self.cores, self.walltime))
+        simlog(DEBUG, "Pilot %d launching on '%s' as job %d." %
+               (self.id, self.dci.name, self.job_id), self.env)
+
+    def run_pilot(self):
+
+        # Wait until the submission completed
+        yield self.submission
 
         # NOTE: I don't think RP has a state to denote the state between
         # the "job started and the agent becoming active.
 
-        simlog(DEBUG, "Pilot %d launching on '%s' at %d." %
-               (self.id, self.dci.name, self.env.now), self.env)
-        yield self.env.timeout(AGENT_STARTUP_DELAY)
+        try:
+            yield self.env.timeout(AGENT_STARTUP_DELAY)
 
-        self.state = ACTIVE
-        simlog(INFO,"Pilot %d started running on '%s' at %d." %
-               (self.id, self.dci.name, self.env.now), self.env)
+            self.state = ACTIVE
+            simlog(INFO,"Pilot %d started running on '%s'." %
+                (self.id, self.dci.name), self.env)
 
+            if self.walltime:
+                yield self.env.timeout(self.walltime)
+                self.state = DONE
+            else:
+                yield self.env.event()
+        except Interrupt as i:
+            self.state = CANCELED
+            simlog(WARNING, "Pilot %d interrupted with '%s'." %
+                   (self.id, i.cause), self.env)
 
         self.env.pilot_state_history[self.id] = self.state_history
 

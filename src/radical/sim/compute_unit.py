@@ -2,12 +2,12 @@ import simpy
 from errors import ResourceException
 from logger import simlog, INFO, WARNING, ERROR
 from states import NEW, CANCELED, EXECUTING, DONE, FAILED
-from constants import FIRST_COMPUTE_UNIT_ID, DEFAULT_CORES_PER_CU
+from constants import INITIAL_COMPUTE_UNIT_ID, DEFAULT_CORES_PER_CU
 
 class ComputeUnit(object):
 
     # Class wide counter for CUs
-    _id_counter = FIRST_COMPUTE_UNIT_ID
+    _id_counter = INITIAL_COMPUTE_UNIT_ID
 
     def __init__(self, env, cores=DEFAULT_CORES_PER_CU):
         self.id = self._id_counter
