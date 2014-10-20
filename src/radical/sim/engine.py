@@ -10,8 +10,8 @@ def run():
 
 
     env = Environment()
-    env.cu_state_history = {}
-    env.pilot_state_history = {}
+    env.cu_stats = {}
+    env.pilot_stats = {}
     env.cu_queue_history = []
 
     simlog(INFO, 'radical.sim version: %s (%s)' % (version, version_detail), env)
@@ -39,8 +39,8 @@ def run():
 
     env.run(until=2000)
 
-    print("CU state history: %s" % env.cu_state_history)
-    print("Pilot state history: %s" % env.pilot_state_history)
+    print("CU statistics: %s" % env.cu_stats)
+    print("Pilot statistics: %s" % env.pilot_stats)
     print("CU queue history: %s" % env.cu_queue_history)
 
 if __name__ == '__main__':

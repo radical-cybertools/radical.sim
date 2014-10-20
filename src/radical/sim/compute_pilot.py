@@ -12,24 +12,33 @@ class ComputePilot(Container):
 
     def __init__(self, env, dci,
                  cores=DEFAULT_CORES_PER_PILOT, walltime=None):
+
         # Create a CP Container with requested capacity and initial level=0
         super(ComputePilot, self).__init__(env, capacity=cores, init=0)
 
-        # ID
+        # Set unique ID
         self.id = self._id_counter
         ComputePilot._id_counter += 1
 
+        # Link to other entities
         self.dci = dci
         self.env = env
 
+        # Some properties
         self.cores = cores
         self.walltime = walltime
 
-        self.state_history = {}
+        # Record keeping
+        self.stats = {}
+        self.stats['cores'] = self.cores
+        self.stats['walltime'] = self.walltime
+        self.env.pilot_stats[self.id] = self.stats
+
+        # Pilot state
         self._state = None
         self.state = NEW
 
-        # TODO: This should probably be triggered by an external process
+        # TODO: This should probably be triggered by an external process?
         self.state = PENDING_LAUNCH
         self.submission = env.process(self.submit_pilot())
         self.agent = env.process(self.run_pilot())
@@ -42,7 +51,7 @@ class ComputePilot(Container):
     @state.setter
     def state(self, new_state):
         self._state = new_state
-        self.state_history[new_state] = self.env.now
+        self.stats[new_state] = self.env.now
 
     def submit_pilot(self):
 
@@ -53,6 +62,9 @@ class ComputePilot(Container):
             self.dci.submit_job(self, self.cores, self.walltime))
         simlog(DEBUG, "Pilot %d launching on '%s' as job %d." %
                (self.id, self.dci.name, self.job_id), self.env)
+
+        # Record the dci for the pilot
+        self.stats['dci'] = self.dci.name
 
     def run_pilot(self):
 
@@ -79,7 +91,6 @@ class ComputePilot(Container):
             simlog(WARNING, "Pilot %d interrupted with '%s'." %
                    (self.id, i.cause), self.env)
 
-        self.env.pilot_state_history[self.id] = self.state_history
 
     def put(self, amount):
         if amount + self.level > self.capacity:

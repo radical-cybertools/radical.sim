@@ -17,7 +17,10 @@ class ComputeUnit(object):
         self.cores = cores
         self.pilot = None
 
-        self.state_history = {}
+        self.stats = {}
+        self.stats['cores'] = self.cores
+        self.env.cu_stats[self.id] = self.stats
+
         self._state = None
         self.state = NEW
 
@@ -36,7 +39,7 @@ class ComputeUnit(object):
     @state.setter
     def state(self, new_state):
         self._state = new_state
-        self.state_history[new_state] = self.env.now
+        self.stats[new_state] = self.env.now
 
     # run() is a special method
     def run(self):

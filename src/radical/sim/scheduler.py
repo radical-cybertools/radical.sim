@@ -40,6 +40,7 @@ class Scheduler(object):
                         simlog(INFO, "Found pilot %d to schedule CU %d onto." % (
                             pilot.id, cu.id), self.env)
                         cu.pilot = pilot
+                        cu.stats['pilot'] = pilot.id
                         self.active_cus.append(self.env.process(cu.run()))
 
                         self.env.cu_queue_history.append(
@@ -59,7 +60,6 @@ class Scheduler(object):
                 (fin_proc, fin_cu) = finished.popitem()
                 self.active_cus.remove(fin_proc)
                 fin_cu.pilot.put(fin_cu.cores)
-                self.env.cu_state_history[fin_cu.id] = fin_cu.state_history
 
             yield self.env.timeout(100)
 
