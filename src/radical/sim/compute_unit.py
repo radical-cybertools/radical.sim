@@ -46,7 +46,7 @@ class ComputeUnit(object):
             #self.env.process(self.walltime(60))
 
             self.state = EXECUTING
-            simlog(INFO, 'Start executing CU %d at %d' % (self.id, self.env.now), self.env)
+            simlog(INFO, 'Start executing CU %d.' % self.id, self.env)
 
             exec_duration = 15
             # We yield the process that process() returns
@@ -55,11 +55,11 @@ class ComputeUnit(object):
                 # TODO: Does this need to be a process / function?
                 yield self.env.process(self.execute(exec_duration))
             except simpy.Interrupt as i:
-                simlog(ERROR, 'Interrupted at %d by %s' % (self.env.now, i.cause), self.env)
+                simlog(ERROR, 'Interrupted by %s' % i.cause, self.env)
                 self.state = CANCELED
                 return
 
-            simlog(INFO, 'Execution of CU %d completed at %d' % (self.id, self.env.now), self.env)
+            simlog(INFO, 'Execution of CU %d completed.' % self.id, self.env)
         except ResourceException as e:
             simlog(WARNING, "Couldn't get resource, ignoring ...", self.env)
         except Exception as e:

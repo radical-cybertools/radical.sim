@@ -34,19 +34,22 @@ class Scheduler(object):
                 try:
                     cu = self.new_cus.popleft()
 
-                    simlog(DEBUG, "Trying to schedule CU %d onto Pilot %d at %d ..." % (cu.id, pilot.id, self.env.now), self.env)
+                    simlog(DEBUG, "Trying to schedule CU %d onto Pilot %d ..." % (
+                        cu.id, pilot.id), self.env)
                     if cu.cores <= pilot.level:
                         pilot.get(cu.cores)
-                        simlog(INFO, "Found pilot %d to schedule CU %d onto at %d." % (pilot.id, cu.id, self.env.now), self.env)
+                        simlog(INFO, "Found pilot %d to schedule CU %d onto." % (
+                            pilot.id, cu.id), self.env)
                         cu.pilot = pilot
                         self.active_cus.append(self.env.process(cu.run()))
                     else:
-                        simlog(WARNING, "Pilot %d has no capacity to schedule CU %d at %d." % (pilot.id, cu.id, self.env.now), self.env)
+                        simlog(WARNING, "Pilot %d has no capacity to schedule CU %d." % (
+                            pilot.id, cu.id), self.env)
                         # Put it back in the queue
                         self.new_cus.appendleft(cu)
 
                 except IndexError:
-                    simlog(DEBUG, "No new CUs to process at %d ..." % self.env.now, self.env)
+                    simlog(DEBUG, "No new CUs to process ...", self.env)
                     yield self.env.timeout(100)
 
             finished = yield AnyOf(self.env, self.active_cus)
