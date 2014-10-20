@@ -2,19 +2,23 @@ import simpy
 from errors import ResourceException
 from logger import simlog, INFO, WARNING, ERROR
 from states import NEW, CANCELED, EXECUTING, DONE, FAILED
+from constants import FIRST_COMPUTE_UNIT_ID, DEFAULT_CORES_PER_CU
 
 class ComputeUnit(object):
 
-    _id_counter = 1
+    # Class wide counter for CUs
+    _id_counter = FIRST_COMPUTE_UNIT_ID
 
-    def __init__(self, env, cores=1):
+    def __init__(self, env, cores=DEFAULT_CORES_PER_CU):
         self.id = self._id_counter
         ComputeUnit._id_counter += 1
 
         self.env = env
         self.cores = cores
         self.pilot = None
+
         self.state_history = {}
+        self._state = None
         self.state = NEW
 
         simlog(INFO, "Creating ComputeUnit %d." % self.id, self.env)
