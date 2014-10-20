@@ -12,14 +12,15 @@ def run():
     env = Environment()
     env.cu_state_history = {}
     env.pilot_state_history = {}
+    env.cu_queue_history = []
 
     simlog(INFO, 'radical.sim version: %s (%s)' % (version, version_detail), env)
 
     stampede = DCI(env, "stampede", 1024)
     archer = DCI(env, "archer", 2048)
     sched = Scheduler(env, "BACK_FILLING")
-    pilot1 = ComputePilot(env, stampede, cores=3)
-    pilot2 = ComputePilot(env, archer, cores=4)
+    pilot1 = ComputePilot(env, stampede, cores=3, walltime=600)
+    pilot2 = ComputePilot(env, archer, cores=4, walltime=600)
 
     sched.add_pilot(pilot1)
     sched.add_pilot(pilot2)
@@ -36,10 +37,11 @@ def run():
     cu4 = ComputeUnit(env, cores=4)
     sched.submit_cu(cu4)
 
-    env.run(until=1000)
+    env.run(until=2000)
 
     print("CU state history: %s" % env.cu_state_history)
     print("Pilot state history: %s" % env.pilot_state_history)
+    print("CU queue history: %s" % env.cu_queue_history)
 
 if __name__ == '__main__':
     run()

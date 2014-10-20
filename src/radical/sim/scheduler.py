@@ -18,7 +18,6 @@ class Scheduler(object):
         # Start the run process every time an instance is created.
         self.action = env.process(self.run())
 
-    # run() is a special method
     def run(self):
         simlog(INFO, "Scheduler %s starting." % self.name, self.env)
 
@@ -42,6 +41,9 @@ class Scheduler(object):
                             pilot.id, cu.id), self.env)
                         cu.pilot = pilot
                         self.active_cus.append(self.env.process(cu.run()))
+
+                        self.env.cu_queue_history.append(
+                            {'time': self.env.now, 'length': len(self.new_cus)})
                     else:
                         simlog(WARNING, "Pilot %d has no capacity to schedule CU %d." % (
                             pilot.id, cu.id), self.env)
