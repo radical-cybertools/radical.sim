@@ -3,7 +3,7 @@ from radical.utils.logger import logger
 
 _logger = logger.getLogger(name='radical.sim')
 
-mp_formatter = Formatter(fmt='[%(levelname)-8s] [%(now)s] %(message)s')
+mp_formatter = Formatter(fmt='[%(levelname)-8s] [%(now)4d] %(message)s')
 
 for handler in _logger.handlers:
     handler.setFormatter(mp_formatter)
