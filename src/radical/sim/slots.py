@@ -53,6 +53,3 @@ class Slots(base.BaseResource):
             del self.items[:event.amount]
             event.succeed(result)
 
-
-if __name__ == '__main__':
-    pass
