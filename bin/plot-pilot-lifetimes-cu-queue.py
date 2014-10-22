@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # TODO: Use constants for colors
+# TODO: Properly deal with Final state.
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -24,10 +25,17 @@ def plot_pilotlifetime(data):
     for p_id in data['pilots']:
         pilot = data['pilots'][p_id]
         # cores, new, running, end
-        if not 'Canceled' in pilot:
+        if not any(state in pilot for state in ['Canceled', 'Done', 'Failed']):
             end = ltf + 1
         else:
-            end = pilot['Canceled']
+            if 'Done' in pilot:
+                end = pilot['Done']
+            elif 'Canceled' in pilot:
+                end = pilot['Canceled']
+            elif 'Failed' in pilot:
+                end = pilot['Failed']
+            else:
+                raise Exception("No ending state.")
 
         pilot_start_times.append(pilot['New']) # collect start coordinates
         durations.append(end-pilot['New']) # collect duration
@@ -54,7 +62,18 @@ def plot_pilotlifetime(data):
         new = pilot['New']
         cores = pilot['cores']
         active = pilot['Active']
-        end = pilot['Canceled']
+        if not any(state in pilot for state in ['Canceled', 'Done', 'Failed']):
+            end = ltf + 1
+        else:
+            if 'Done' in pilot:
+                end = pilot['Done']
+            elif 'Canceled' in pilot:
+                end = pilot['Canceled']
+            elif 'Failed' in pilot:
+                end = pilot['Failed']
+            else:
+                raise Exception("No ending state.")
+
 
         y = cum_cores + cores/2.0 + 0.5
         #y = cum_cores + cores
