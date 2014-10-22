@@ -20,25 +20,16 @@ def run():
     stampede = DCI(env, "stampede", 1024)
     archer = DCI(env, "archer", 2048)
     sched = Scheduler(env, "BACK_FILLING")
-    pilot1 = ComputePilot(env, stampede, cores=3, walltime=600)
-    pilot2 = ComputePilot(env, archer, cores=4, walltime=600)
 
-    sched.add_pilot(pilot1)
-    sched.add_pilot(pilot2)
+    for _ in range(10):
+        pilot = ComputePilot(env, stampede, cores=4, walltime=300)
+        sched.add_pilot(pilot)
 
-    cu1 = ComputeUnit(env, cores=1)
-    sched.submit_cu(cu1)
+    for _ in range(100):
+        cu = ComputeUnit(env, cores=2)
+        sched.submit_cu(cu)
 
-    cu2 = ComputeUnit(env, cores=2)
-    sched.submit_cu(cu2)
-
-    cu3 = ComputeUnit(env, cores=3)
-    sched.submit_cu(cu3)
-
-    cu4 = ComputeUnit(env, cores=4)
-    sched.submit_cu(cu4)
-
-    env.run(until=2000)
+    env.run(until=1000)
 
     from pprint import pprint
     print("CU statistics:")
