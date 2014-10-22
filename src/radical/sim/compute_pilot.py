@@ -4,7 +4,7 @@ from states import NEW, PENDING_LAUNCH, PENDING_ACTIVE, ACTIVE, DONE, CANCELED
 from logger import simlog, INFO, DEBUG, WARNING
 from constants import AGENT_STARTUP_DELAY, INITIAL_COMPUTE_PILOT_ID, \
     DEFAULT_CORES_PER_PILOT, DEFAULT_WALLTIME, INITIAL_SLOT_ID
-from slots import Slot
+from slots import Slots
 
 
 class ComputePilot(object):

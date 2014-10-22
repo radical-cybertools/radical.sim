@@ -11,9 +11,9 @@ class SlotsGet(base.Get):
         self.cores = cores
         super(SlotsGet, self).__init__(resource)
 
-class Slot(base.BaseResource):
+class Slots(base.BaseResource):
     def __init__(self, env, capacity=1):
-        super(Slot, self).__init__(env)
+        super(Slots, self).__init__(env)
         if capacity <= 0:
             raise ValueError('"capacity" must be > 0.')
         self._capacity = capacity
