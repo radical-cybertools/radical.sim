@@ -195,6 +195,7 @@ def plot_pilotlifetime(data):
 
     # Start at 0
     plt.xlim(0)
+    plt.ylim(0)
 
     plt.show()
 
