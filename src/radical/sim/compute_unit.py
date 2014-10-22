@@ -1,7 +1,7 @@
 import simpy
 from errors import ResourceException
 from logger import simlog, INFO, WARNING, ERROR
-from states import NEW, CANCELED, EXECUTING, DONE, FAILED
+from states import NEW, CANCELED, EXECUTING, DONE, FAILED, STAGING_INPUT, STAGING_OUTPUT
 from constants import INITIAL_COMPUTE_UNIT_ID, DEFAULT_CORES_PER_CU
 
 class ComputeUnit(object):
@@ -48,15 +48,25 @@ class ComputeUnit(object):
             # Register the walltime interrupter
             #self.env.process(self.walltime(60))
 
-            self.state = EXECUTING
-            simlog(INFO, 'Start executing CU %d.' % self.id, self.env)
-
-            exec_duration = 15
-            # We yield the process that process() returns
-            # to wait for it to finish
             try:
+                self.state = STAGING_INPUT
+                simlog(INFO, 'Staging input for CU %d.' % self.id, self.env)
+                yield self.env.timeout(10)
+
+                self.state = EXECUTING
+                simlog(INFO, 'Start executing CU %d.' % self.id, self.env)
+
+                exec_duration = 15
+                # We yield the process that process() returns
+                # to wait for it to finish
                 # TODO: Does this need to be a process / function?
+
                 yield self.env.process(self.execute(exec_duration))
+
+                self.state = STAGING_OUTPUT
+                simlog(INFO, 'Staging output for CU %d.' % self.id, self.env)
+                yield self.env.timeout(20)
+
             except simpy.Interrupt as i:
                 simlog(ERROR, 'Interrupted by %s' % i.cause, self.env)
                 self.state = CANCELED
