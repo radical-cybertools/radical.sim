@@ -40,7 +40,6 @@ class DCI(Container):
 
         simlog(INFO, "Job %d launching on %s with %d cores." % (
             self.id, self.name, cores), self.env)
-        yield job.put(cores)
 
         simlog(INFO, "Job %d will run for %d seconds ..." % (
             self.id, walltime), self.env)

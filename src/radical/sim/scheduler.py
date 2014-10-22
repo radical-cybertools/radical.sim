@@ -35,12 +35,17 @@ class Scheduler(object):
 
                     simlog(DEBUG, "Trying to schedule CU %d onto Pilot %d ..." % (
                         cu.id, pilot.id), self.env)
-                    if cu.cores <= pilot.level:
-                        pilot.get(cu.cores)
+                    if cu.cores <= len(pilot.items):
+
+                        cu.slots = yield pilot.myget(cu.cores)
+                        cu.stats['slots'] = cu.slots
+
                         simlog(INFO, "Found pilot %d to schedule CU %d onto." % (
                             pilot.id, cu.id), self.env)
+
                         cu.pilot = pilot
                         cu.stats['pilot'] = pilot.id
+
                         self.active_cus.append(self.env.process(cu.run()))
 
                         self.env.cu_queue_history.append(
@@ -59,7 +64,7 @@ class Scheduler(object):
             while finished:
                 (fin_proc, fin_cu) = finished.popitem()
                 self.active_cus.remove(fin_proc)
-                fin_cu.pilot.put(fin_cu.cores)
+                fin_cu.pilot.myput(fin_cu.cores)
 
             yield self.env.timeout(100)
 
