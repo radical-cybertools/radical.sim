@@ -45,9 +45,6 @@ class ComputeUnit(object):
     def run(self):
 
         try:
-            # Register the walltime interrupter
-            #self.env.process(self.walltime(60))
-
             try:
                 self.state = STAGING_INPUT
                 simlog(INFO, 'Staging input for CU %d.' % self.id, self.env)
@@ -87,11 +84,3 @@ class ComputeUnit(object):
 
     def execute(self, duration):
         yield self.env.timeout(duration)
-
-    # def walltime(self, duration):
-    #     yield self.env.timeout(duration)
-    #     try:
-    #         self.action.interrupt('Walltime reached!')
-    #     except Exception as e:
-    #         # TODO: better exception handling
-    #         print('Warning: %s' % e.message)
