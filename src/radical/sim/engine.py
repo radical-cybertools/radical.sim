@@ -1,3 +1,4 @@
+import json
 from simpy import Environment
 from compute_unit import ComputeUnit
 from compute_pilot import ComputePilot
@@ -39,9 +40,21 @@ def run():
 
     env.run(until=2000)
 
-    print("CU statistics: %s" % env.cu_stats)
-    print("Pilot statistics: %s" % env.pilot_stats)
-    print("CU queue history: %s" % env.cu_queue_history)
+    from pprint import pprint
+    print("CU statistics:")
+    pprint(env.cu_stats)
+    print("Pilot statistics:")
+    pprint(env.pilot_stats)
+    print("CU queue history:")
+    pprint(env.cu_queue_history)
+
+    data = {}
+    data['cus'] = env.cu_stats
+    data['pilots'] = env.pilot_stats
+    data['queue'] = env.cu_queue_history
+
+    with open('/tmp/results.txt', 'w') as outfile:
+        json.dump(data, outfile, sort_keys = True, indent = 4, ensure_ascii=False)
 
 if __name__ == '__main__':
     run()
