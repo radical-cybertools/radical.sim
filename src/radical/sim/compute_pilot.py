@@ -85,6 +85,7 @@ class ComputePilot(object):
 
         # NOTE: I don't think RP has a state to denote the state between
         # the "job started and the agent becoming active.
+        self.state = 'Bootstrapping'
 
         try:
             yield self.env.timeout(AGENT_STARTUP_DELAY)
