@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# TODO: Use constants for colors
+
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator
@@ -41,28 +43,33 @@ def plot_pilotlifetime(data):
     #eb.set_ylim(0,10)
 
     # Plot total lifetime
-    eb.errorbar(pilot_start_times, pilots, xerr=pilot_durations, fmt='None', ecolor='black', label='ComputePilot')
+    #eb.errorbar(pilot_start_times, pilots, xerr=pilot_durations, fmt='None', ecolor='black', label='ComputePilot')
 
     # Pilot Queue times
-    color='red'
     cum_cores = 0
     for p_id in data['pilots']:
         # cores, new, running, end in pilot_lifetimes:
         pilot = data['pilots'][p_id]
+        bootstrapping = pilot['Bootstrapping']
         new = pilot['New']
         cores = pilot['cores']
-        running = pilot['Active']
+        active = pilot['Active']
+        end = pilot['Canceled']
 
         y = cum_cores + cores/2.0 + 0.5
         #y = cum_cores + cores
         #y = cum_cores + cores/2.0 + 0.5
 
         # plot red only for pilots that never started
-        if not running:
-            running = ltf + 1
+        if not active:
+            active = ltf + 1
 
-        eb.broken_barh([(new, running-new)], (y-cores/2.0+.1, cores-.2), edgecolor=color,
-                facecolor=color, label='Pilot Queue')
+        for offset in range(cores):
+            eb.broken_barh([(new, end)], (cum_cores + offset + .6  , .8), edgecolor='black',
+                           facecolor='LightGrey', label='Core Idle')
+
+        eb.broken_barh([(new, bootstrapping-new), (bootstrapping, active-bootstrapping)], (y-cores/2.0+.1, cores-.2), edgecolor=['red','Blue'],
+                facecolor=['red', 'Blue'], label='Pilot Queue')
 
         cum_cores += cores
 
@@ -75,11 +82,9 @@ def plot_pilotlifetime(data):
         #name = cu['name']
         #state = cu['state']
         #errno = cu['errno']
-        #download = cu['download']
-        download = cu['Executing']
+        staging_in = cu['StagingInput']
         run = cu['Executing']
-        #upload = cu['upload']
-        upload = cu['Done']
+        staging_out = cu['StagingOutput']
         end = cu['Done']
         #site = cu['site']
 
@@ -102,9 +107,9 @@ def plot_pilotlifetime(data):
             #                  (upload, end-upload)], (y-0.4, .8),
             #                  facecolor=colors,
             #                  hatch=hatch, label='CU')
-            eb.broken_barh([(download, run-download),
-                             (run, upload-run),
-                             (upload, end-upload)], (y-.4, .8),
+            eb.broken_barh([(staging_in, run-staging_in),
+                             (run, staging_out-run),
+                             (staging_out, end-staging_out)], (y-.4, .8),
                              facecolor=colors, edgecolors=colors,
                              hatch=hatch, label='CU', color='None')
 
@@ -129,12 +134,8 @@ def plot_pilotlifetime(data):
     
     tq.ticklabel_format(style='plain')
     tq.set_ylabel('Waiting ComputeUnits')
-
-#    ya = tq.get_yaxis()
-#    ya.set_major_locator(MaxNLocator(integer=True))
-
-    #plt.ylim(0,10)
-    #plt.xlim(1353410004-100, ltf+100)
+    tq_y_ax = tq.axes.get_yaxis()
+    tq_y_ax.set_major_locator(MaxNLocator(integer=True))
 
     # Get handles and labels for both eb and tq
     handles, labels = eb.get_legend_handles_labels()
@@ -146,7 +147,11 @@ def plot_pilotlifetime(data):
     p = Rectangle((0, 0), 1, 1, fc='red')
     handles.append(p)
     labels.append('CP Queued')
-    
+
+    p = Rectangle((0, 0), 1, 1, fc='Blue')
+    handles.append(p)
+    labels.append('CP Bootstrapping')
+
     p = Rectangle((0, 0), 1, 1, fc='yellow')
     handles.append(p)
     labels.append('CU Staging-In')
@@ -162,8 +167,12 @@ def plot_pilotlifetime(data):
     p = Rectangle((0, 0), 1, 1, fc='white', hatch='xxx')
     #p = Rectangle((0, 0), 1, 1, fc='black')
     handles.append(p)
-    labels.append("Failed") 
-    
+    labels.append("CU Failed")
+
+    p = Rectangle((0, 0), 1, 1, fc='LightGrey')
+    handles.append(p)
+    labels.append('Core Idle')
+
     # draw the legend 
     eb.legend(handles, labels, loc=1)
 
