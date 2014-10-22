@@ -49,8 +49,8 @@ class Slots(base.BaseResource):
             raise ValueError("Can't get more than capacity allows.")
 
         if self.items >= self.available:
-            result = self.items[-event.amount:]
-            del self.items[-event.amount:]
+            result = self.items[:event.amount]
+            del self.items[:event.amount]
             event.succeed(result)
 
 
