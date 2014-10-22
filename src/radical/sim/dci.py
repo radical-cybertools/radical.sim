@@ -51,4 +51,6 @@ class DCI(Container):
         yield self.env.timeout(walltime)
         simlog(INFO, "Job %d reached maximum walltime of %d seconds." % (
             self.id, walltime), self.env)
-        self.job.agent.interrupt('Walltime')
+        if not self.job.agent.triggered:
+            # TODO: Why do the processes disappear and do we need this check?
+            self.job.agent.interrupt('Walltime')
