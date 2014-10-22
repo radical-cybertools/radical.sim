@@ -203,18 +203,6 @@ def plot_pilotlifetime(data):
     #plt.savefig('fig.pdf', format='pdf', bbox_inches=(10,5), dpi=600)
 
 
-def last_cu_done(cus):
-
-    # keep track of the finishing time of the last compute unit
-    last = 0
-
-    for cu in cus:
-        done = cu[7]
-        #done = cu[4]
-        last = max(last, done)
-
-    return last
-
 def json_parser(filename):
 
     with open(filename) as data_file:
@@ -248,7 +236,6 @@ if __name__ == '__main__':
     my_tq = [(0,0), (1,4), (2,3), (3,2), (10,1), (15,0) ]
 
     data = json_parser('/tmp/results.txt')
-
 
     #print my_pilot_lifetimes
     #print my_cus
