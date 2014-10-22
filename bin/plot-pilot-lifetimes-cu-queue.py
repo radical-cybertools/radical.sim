@@ -3,23 +3,35 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.ticker import MaxNLocator
-from parse import parse_file
+from pprint import pprint
+import json
 
-def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
+def plot_pilotlifetime(data):
+
+    # keep track of the finishing time of the last compute unit
+    ltf = 0
+    for cu in data['cus']:
+        done = data['cus'][cu]['Done']
+        ltf = max(ltf, done)
 
     # Pilot Life times
     pilot_start_times = []
     durations = []
     cum_cores = 0
-    pilots = []
-    for cores, new, running, end in pilot_lifetimes:
-        if not end:
+    pilots = [] # TODO: should be a dict?
+    for p_id in data['pilots']:
+        pilot = data['pilots'][p_id]
+        # cores, new, running, end
+        if not 'Canceled' in pilot:
             end = ltf + 1
-        pilot_start_times.append(new) # collect start coordinates
-        durations.append(end-new) # collect duration
-        y = cum_cores + cores/2.0 + 0.5
+        else:
+            end = pilot['Canceled']
+
+        pilot_start_times.append(pilot['New']) # collect start coordinates
+        durations.append(end-pilot['New']) # collect duration
+        y = cum_cores + pilot['cores']/2.0 + 0.5
         pilots.append(y)
-        cum_cores += cores
+        cum_cores += pilot['cores']
     pilot_durations = [ [0] * len(pilots), durations ] # error = [(0, duration)]
 
     eb = plt.subplot(111)
@@ -34,7 +46,13 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
     # Pilot Queue times
     color='red'
     cum_cores = 0
-    for cores, new, running, end in pilot_lifetimes:
+    for p_id in data['pilots']:
+        # cores, new, running, end in pilot_lifetimes:
+        pilot = data['pilots'][p_id]
+        new = pilot['New']
+        cores = pilot['cores']
+        running = pilot['Active']
+
         y = cum_cores + cores/2.0 + 0.5
         #y = cum_cores + cores
         #y = cum_cores + cores/2.0 + 0.5
@@ -49,7 +67,22 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
         cum_cores += cores
 
     # CU Life Times
-    for pilot, slots, name, cores, state, errno, download, run, upload, end, site in cus:
+    #for pilot, slots, name, cores, state, errno, download, run, upload, end, site in cus:
+    for cu_id in data['cus']:
+        cu = data['cus'][cu_id]
+        pilot = cu['pilot']
+        slots = cu['slots']
+        #name = cu['name']
+        #state = cu['state']
+        #errno = cu['errno']
+        #download = cu['download']
+        download = cu['Executing']
+        run = cu['Executing']
+        #upload = cu['upload']
+        upload = cu['Done']
+        end = cu['Done']
+        #site = cu['site']
+
         colors=['yellow', 'green', 'orange']
         hatch = None
         if run == 0:
@@ -59,7 +92,9 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
             hatch='x'
 
         for slot in slots:
-            y = pilots[pilot] - pilot_lifetimes[pilot][0]/2.0 + 0.5 + slot
+            print 'pilot: %d' % pilot
+            y = pilots[pilot-1] - data['pilots'][str(pilot)]['cores']/2.0 + 0.5 + (slot - 1)
+            print 'y: %d' % y
 
             # TODO: what if execution or upload fails?
             # eb.broken_barh([(download, run-download),
@@ -80,7 +115,11 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
     q_t = []
     q_l = []
 
-    for t,l in tq:
+    #for t,l in tq:
+    for tq in data['queue']:
+        t = tq['time']
+        l = tq['length']
+
         q_t.append(t)
         q_l.append(l)
 
@@ -136,7 +175,6 @@ def plot_pilotlifetime(pilot_lifetimes, cus, tq, ltf):
     #plt.savefig('fig.pdf', format='pdf', bbox_inches=(10,5), dpi=600)
 
 
-
 def last_cu_done(cus):
 
     # keep track of the finishing time of the last compute unit
@@ -148,6 +186,13 @@ def last_cu_done(cus):
         last = max(last, done)
 
     return last
+
+def json_parser(filename):
+
+    with open(filename) as data_file:
+        data = json.load(data_file)
+
+    return data
 
 
 if __name__ == '__main__':
@@ -164,9 +209,9 @@ if __name__ == '__main__':
     # Compute Units
     # tuplics of (0:pilot, 1:slots, 2:name, 3:cores, 4:state, 5:errno, 6:download, 7:run, 8:upload, 9:end, 10:site)
     my_cus = [
-        (0, [0], "cu0", 1, "Done", 0, 2, 4,  6, 7, "stampede"),
-        (1, [1], "cu1", 1, "Done", 0, 4, 5,  7, 8, "stampede"),
-        (2, [1,2], "cu2", 2, "Done", 0, 5, 6,  8, 9, "stampede"),
+        (0, [0], "cu0", 1, "Done", 0, 2, 4, 6, 7, "stampede"),
+        (1, [1], "cu1", 1, "Done", 0, 4, 5, 7, 8, "stampede"),
+        (2, [1,2], "cu2", 2, "Done", 0, 5, 6, 8, 9, "stampede"),
         (3, [0,1,2,3], "cu3", 4, "Done", 0, 12,13,16,18, "stampede")
     ]
 
@@ -174,13 +219,11 @@ if __name__ == '__main__':
     # Tuples of (0:Time, 1:Length)
     my_tq = [(0,0), (1,4), (2,3), (3,2), (10,1), (15,0) ]
 
-    #my_pilot_lifetimes, my_cus, my_tq, my_start, my_stop = \
-    #        parse_file('test11.log')
+    data = json_parser('/tmp/results.txt')
 
-    my_ltf = last_cu_done(my_cus)
 
-    print my_pilot_lifetimes
-    print my_cus
-    print my_tq
+    #print my_pilot_lifetimes
+    #print my_cus
+    #print my_tq
 
-    plot_pilotlifetime(my_pilot_lifetimes, my_cus, my_tq, my_ltf)
+    plot_pilotlifetime(data)
