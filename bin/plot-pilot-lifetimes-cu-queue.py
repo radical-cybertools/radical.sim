@@ -14,9 +14,11 @@ def plot_pilotlifetime(data):
 
     # keep track of the finishing time of the last compute unit
     ltf = 0
-    for cu in data['cus']:
-        done = data['cus'][cu]['Done']
-        ltf = max(ltf, done)
+    for cu_id in data['cus']:
+        cu = data['cus'][cu_id]
+        if 'Done' in cu:
+            done = ['Done']
+            ltf = max(ltf, done)
 
     # Pilot Life times
     pilot_start_times = []
@@ -91,7 +93,11 @@ def plot_pilotlifetime(data):
     #for pilot, slots, name, cores, state, errno, download, run, upload, end, site in cus:
     for cu_id in data['cus']:
         cu = data['cus'][cu_id]
-        pilot = cu['pilot']
+        if 'pilot' in cu:
+            pilot = cu['pilot']
+        else:
+            # CU not yet scheduled, skipping
+            continue
         slots = cu['slots']
         #name = cu['name']
         #state = cu['state']
