@@ -17,7 +17,7 @@ def plot_pilotlifetime(data):
     for cu_id in data['cus']:
         cu = data['cus'][cu_id]
         if 'Done' in cu:
-            done = ['Done']
+            done = cu['Done']
             ltf = max(ltf, done)
 
     # Pilot Life times
