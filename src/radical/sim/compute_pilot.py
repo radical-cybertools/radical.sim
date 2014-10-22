@@ -14,9 +14,6 @@ class ComputePilot(object):
     def __init__(self, env, dci,
                  cores=DEFAULT_CORES_PER_PILOT, walltime=None):
 
-        # Create a CP Container with requested capacity
-        super(ComputePilot, self).__init__(env, capacity=cores)
-
         # Set unique ID
         self.id = self._id_counter
         ComputePilot._id_counter += 1
@@ -25,15 +22,23 @@ class ComputePilot(object):
         self.dci = dci
         self.env = env
 
-        # Fill the store
-        #env.process(self.create_slots(cores))
-        self.init = env.process(self.myput(
-            range(INITIAL_SLOT_ID, cores+INITIAL_SLOT_ID)))
-        #self.create_slots(cores)
-
         # Some properties
         self.cores = cores
         self.walltime = walltime
+
+        # Create a CP Slots Resource with requested capacity
+        self.slots = Slots(self.env, capacity=cores)
+
+        # Fill the store
+        #env.process(self.create_slots(cores))
+        slot_labels = range(INITIAL_SLOT_ID, cores+INITIAL_SLOT_ID)
+        simlog(INFO, "Created slot labels: %s for pilot %d." %
+               (slot_labels, self.id), self.env)
+
+        self.put(slot_labels)
+        simlog(DEBUG, "After initial slots put() for pilot %d." % self.id, self.env)
+        #self.create_slots(cores)
+
 
         # Record keeping
         self.stats = {}
@@ -98,38 +103,30 @@ class ComputePilot(object):
             simlog(WARNING, "Pilot %d interrupted with '%s'." %
                    (self.id, i.cause), self.env)
 
-    def myput(self, slots):
+    def put(self, slots):
 
         # Deal with single entry slots
         if not isinstance(slots, list):
             slots = [slots]
 
-        if len(slots) + len(self.items) > self.capacity:
+        if len(slots) + len(self.slots.items) > self.slots.capacity:
             raise ResourceException("Can't add (%d) to level (%d) "
                 "as it is more than capacity (%d) allows." %
-                            (len(slots), len(self.items), self.capacity))
+                            (len(slots), len(self.slots.items), self.slots.capacity))
 
-        simlog(DEBUG,"Adding %d cores to the capacity of Pilot %d on %s." %
-               (len(slots), self.id, self.dci.name), self.env)
+        simlog(DEBUG,"Adding %d cores (%s) to the capacity of Pilot %d on %s." %
+               (len(slots), slots, self.id, self.dci.name), self.env)
 
-        for slot in slots:
-            yield self.put(slot)
-            print "after yield put"
+        self.slots.put(slots)
 
-        event.succeed()
 
-    def myget(self, amount):
+    def get(self, cores):
 
-        #simlog(INFO, "Requesting %d cores from the capacity of Pilot %d on %s." %
-        #       (amount, self.id, self.dci.name), self.env)
+        simlog(INFO, "Requesting %d cores from the capacity of Pilot %d on %s." %
+               (cores, self.id, self.dci.name), self.env)
 
-        slots = []
-        for _ in range(amount):
-            #slot = self.get()
-            slot = yield self.get()
-            print 'Slot: %s' % slot
-            slots.append(slot)
+        slots = self.slots.get(cores)
+        print 'Slots: %s' % slots
 
-        self.env.exit(slots)
-        #return slots
-        #TODO: better override this class!
+        #self.env.exit(slots)
+        return slots
