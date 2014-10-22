@@ -64,14 +64,12 @@ class ComputeUnit(object):
                 simlog(INFO, 'Staging output for CU %d.' % self.id, self.env)
                 yield self.env.timeout(20)
 
+                simlog(INFO, 'Execution of CU %d completed.' % self.id, self.env)
+
             except simpy.Interrupt as i:
                 simlog(ERROR, 'Interrupted by %s' % i.cause, self.env)
                 self.state = CANCELED
-                return
 
-            simlog(INFO, 'Execution of CU %d completed.' % self.id, self.env)
-        except ResourceException as e:
-            simlog(WARNING, "Couldn't get resource, ignoring ...", self.env)
         except Exception as e:
             simlog(ERROR, "Exception in CU Run(): %s" % e.message, self.env)
             self.state = FAILED
