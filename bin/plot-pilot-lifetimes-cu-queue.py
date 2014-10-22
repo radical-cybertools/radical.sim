@@ -2,6 +2,7 @@
 
 # TODO: Use constants for colors
 # TODO: Properly deal with Final state.
+# TODO: left y axis should show the correct number of pilots
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
@@ -21,10 +22,9 @@ def plot_pilotlifetime(data):
     pilot_start_times = []
     durations = []
     cum_cores = 0
-    pilots = [] # TODO: should be a dict?
-    for p_id in data['pilots']:
+    pilots = []
+    for p_id in sorted(data['pilots'], key=lambda i: int(i)):
         pilot = data['pilots'][p_id]
-        # cores, new, running, end
         if not any(state in pilot for state in ['Canceled', 'Done', 'Failed']):
             end = ltf + 1
         else:
@@ -48,15 +48,13 @@ def plot_pilotlifetime(data):
     eb.yaxis.set_major_locator(MaxNLocator(integer=True))
     eb.set_ylabel('ComputePilot Instance')
     eb.set_xlabel('Time (s)')
-    #eb.set_ylim(0,10)
 
     # Plot total lifetime
     #eb.errorbar(pilot_start_times, pilots, xerr=pilot_durations, fmt='None', ecolor='black', label='ComputePilot')
 
     # Pilot Queue times
     cum_cores = 0
-    for p_id in data['pilots']:
-        # cores, new, running, end in pilot_lifetimes:
+    for p_id in sorted(data['pilots'], key=lambda i: int(i)):
         pilot = data['pilots'][p_id]
         bootstrapping = pilot['Bootstrapping']
         new = pilot['New']
@@ -74,17 +72,14 @@ def plot_pilotlifetime(data):
             else:
                 raise Exception("No ending state.")
 
-
         y = cum_cores + cores/2.0 + 0.5
-        #y = cum_cores + cores
-        #y = cum_cores + cores/2.0 + 0.5
 
         # plot red only for pilots that never started
         if not active:
             active = ltf + 1
 
         for offset in range(cores):
-            eb.broken_barh([(new, end)], (cum_cores + offset + .6  , .8), edgecolor='black',
+            eb.broken_barh([(new, end)], (cum_cores + offset + .6  , .8), edgecolor='lightgrey',
                            facecolor='LightGrey', label='Core Idle')
 
         eb.broken_barh([(new, bootstrapping-new), (bootstrapping, active-bootstrapping)], (y-cores/2.0+.1, cores-.2), edgecolor=['red','Blue'],
@@ -116,9 +111,7 @@ def plot_pilotlifetime(data):
             hatch='x'
 
         for slot in slots:
-            print 'pilot: %d' % pilot
             y = pilots[pilot-1] - data['pilots'][str(pilot)]['cores']/2.0 + 0.5 + (slot - 1)
-            print 'y: %d' % y
 
             # TODO: what if execution or upload fails?
             # eb.broken_barh([(download, run-download),
@@ -139,7 +132,6 @@ def plot_pilotlifetime(data):
     q_t = []
     q_l = []
 
-    #for t,l in tq:
     for tq in data['queue']:
         t = tq['time']
         l = tq['length']
@@ -148,8 +140,7 @@ def plot_pilotlifetime(data):
         q_l.append(l)
 
     tq = plt.twinx()
-    #ax2.step(q_t, q_l, '--', color='black')
-    tq.plot(q_t, q_l, 'r--', color='blue', drawstyle='steps-post', linewidth=2.0, label='CU Queue Length')
+    tq.plot(q_t, q_l, 'r--', color='cyan', drawstyle='steps-post', linewidth=4.0, label='CU Queue Length')
     
     tq.ticklabel_format(style='plain')
     tq.set_ylabel('Waiting ComputeUnits')
@@ -184,7 +175,6 @@ def plot_pilotlifetime(data):
     labels.append('CU Staging-Out')
 
     p = Rectangle((0, 0), 1, 1, fc='white', hatch='xxx')
-    #p = Rectangle((0, 0), 1, 1, fc='black')
     handles.append(p)
     labels.append("CU Failed")
 
@@ -196,6 +186,9 @@ def plot_pilotlifetime(data):
     eb.legend(handles, labels, loc=1)
 
     plt.title('ComputePilot Lifetimes with ComputeUnit Queue Length')
+
+    # Start at 0
+    plt.xlim(0)
 
     plt.show()
 
