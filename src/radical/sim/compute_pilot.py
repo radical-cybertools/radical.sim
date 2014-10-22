@@ -127,7 +127,5 @@ class ComputePilot(object):
                (cores, self.id, self.dci.name), self.env)
 
         slots = self.slots.get(cores)
-        print 'Slots: %s' % slots
 
-        #self.env.exit(slots)
         return slots
