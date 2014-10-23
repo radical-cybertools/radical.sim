@@ -13,12 +13,16 @@ class Scheduler(object):
         self.name = name
         self.pilots = []
         self.new_cus = [] # Want to iterate over it
-        self.active_cus = [] # Need a list as an argument to AnyOf
 
         simlog(INFO, "Intitializing scheduler %s." % self.name, self.env)
 
         # Start the run process every time an instance is created.
         self.action = env.process(self.run())
+
+    def cu_complete_callback(self, event):
+        cu = event.value
+        simlog(INFO, "Scheduler callback CU %d complete." % cu.id, self.env)
+        cu.pilot.put(cu.slots)
 
     def run(self):
         simlog(INFO, "Scheduler %s starting." % self.name, self.env)
@@ -29,11 +33,6 @@ class Scheduler(object):
                     # Don't try to run on inactive pilots
                     yield self.env.timeout(SHORT) # Need this yield
                     continue
-
-                # if not pilot.slots.items:
-                #     simlog(WARNING, "Pilot %d has no free slots, skipping this iteration." % pilot.id, self.env)
-                #     yield self.env.timeout(SHORT)
-                #     continue
 
                 activated_cus = []
                 for cu in self.new_cus:
@@ -46,7 +45,8 @@ class Scheduler(object):
                         cu.stats['slots'] = cu.slots
 
                         activated_cus.append(cu)
-                        self.active_cus.append(self.env.process(cu.run()))
+                        cu_proc = self.env.process(cu.run())
+                        cu_proc.callbacks.append(self.cu_complete_callback)
 
                     elif cu.cores <= pilot.slots.capacity:
                         simlog(WARNING, "Pilot %d has not enough free slots to schedule CU %d." % (pilot.id, cu.id), self.env)
@@ -57,18 +57,6 @@ class Scheduler(object):
                 self.env.cu_queue_history.append({'time': self.env.now, 'length': len(self.new_cus)})
 
                 yield self.env.timeout(SHORT)
-
-            # Check for finished after looped over all pilots
-            #finished = yield AnyOf(self.env, self.active_cus)
-            #finished = yield AnyOf(self.env, self.active_cus+[self.env.timeout(2, 'timeout')])
-            #while finished:
-            finished = [cu for cu in self.active_cus if cu.processed]
-            for f in finished:
-                #(fin_proc, fin_cu) = finished.popitem()
-                fin_cu = yield f
-                #if fin_proc in self.active_cus:
-                self.active_cus.remove(f)
-                fin_cu.pilot.put(fin_cu.slots)
 
         # This yield is good!
         yield self.env.timeout(SHORT)
