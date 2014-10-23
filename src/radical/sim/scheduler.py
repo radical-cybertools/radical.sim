@@ -56,6 +56,8 @@ class Scheduler(object):
                 self.new_cus[:] = [cu for cu in self.new_cus if cu not in activated_cus]
                 self.env.cu_queue_history.append({'time': self.env.now, 'length': len(self.new_cus)})
 
+                yield self.env.timeout(SHORT)
+
             # Check for finished after looped over all pilots
             #finished = yield AnyOf(self.env, self.active_cus)
             #finished = yield AnyOf(self.env, self.active_cus+[self.env.timeout(2, 'timeout')])
