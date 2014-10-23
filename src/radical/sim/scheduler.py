@@ -58,9 +58,6 @@ class Scheduler(object):
 
                 yield self.env.timeout(SHORT)
 
-        # This yield is good!
-        yield self.env.timeout(SHORT)
-
     def submit_cu(self, cu):
         self.new_cus.append(cu)
         cu.state = STATE_X
