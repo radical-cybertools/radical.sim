@@ -30,15 +30,11 @@ class ComputePilot(object):
         self.slots = Slots(self.env, capacity=cores)
 
         # Fill the store
-        #env.process(self.create_slots(cores))
         slot_labels = range(INITIAL_SLOT_ID, cores+INITIAL_SLOT_ID)
         simlog(INFO, "Created slot labels: %s for pilot %d." %
                (slot_labels, self.id), self.env)
-
         self.put(slot_labels)
         simlog(DEBUG, "After initial slots put() for pilot %d." % self.id, self.env)
-        #self.create_slots(cores)
-
 
         # Record keeping
         self.stats = {}
@@ -119,7 +115,6 @@ class ComputePilot(object):
                (len(slots), slots, self.id, self.dci.name), self.env)
 
         self.slots.put(slots)
-
 
     def get(self, cores):
 
